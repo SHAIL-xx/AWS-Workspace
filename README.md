@@ -1,50 +1,44 @@
-Cloud-Workspace: Local & Production Serverless Infrastructure
-Welcome to my Cloud Engineering workspace. This repository serves as a centralized portfolio demonstrating cloud automation, serverless engineering workflows, and Infrastructure-as-Code (IaC) architectures. It showcases the progression from local emulation and scratchpad labs to production-ready deployments.
+# AWS Cloud Engineering Workspace
 
-🏗️ Architecture Layout & Strategy
-The repository is structured to separate application workflows, local testing orchestration, infrastructure blueprints, and laboratory practices:
+This repository collects AWS automation examples, local-emulation projects, Terraform
+configurations, and learning labs. It is a portfolio and practice workspace; the presence of
+an AWS deployment example does not mean it is production-ready.
 
-Plaintext
-Cloud-Workspace/
-│
-├── aws-deploy/         # Production-ready automation scripts for live AWS deployment
-├── localstack-dev/     # Offline cloud emulation pipelines utilizing LocalStack & Docker
-├── terraform-infra/    # Infrastructure-as-Code (IaC) configurations for provisioning
-└── lab-practice/       # Structured sandbox for service experimentation and baseline labs
-📁 Directory Breakdown
-🛰️ aws-deploy/
-Contains optimized, production-grade cloud orchestration scripts (Python/Boto3 and AWS SAM templates) configured without local testing overrides. These are packaged and tuned for live execution inside genuine AWS accounts.
+## Project areas
 
-🪹 localstack-dev/
-Dedicated local emulation workspace. It bridges container environments via custom network endpoints (http://localhost:4566 or [http://host.docker.internal:4566](http://host.docker.internal:4566)), allowing automated testing of services offline via LocalStack and Docker without incurring live cloud costs.
+- `aws-deploy/`: AWS SAM/Lambda examples intended for deployment to AWS. Review each template,
+  permissions, account, region, and potential costs before deploying.
+- `localstack-dev/`: LocalStack-based service experiments. The Compose file uses LocalStack
+  `4.14.0`, requires an auth token, and enables persistence.
+- `terraform-infra/`: Reusable Terraform infrastructure examples. The root configuration uses
+  a remote S3 state backend; do not initialize, migrate, or apply it without the intended backend
+  and state access.
+- `lab-practise/`: Learning exercises and service-specific experiments.
 
-📐 terraform-infra/
-Houses declarative Infrastructure-as-Code (IaC) configuration files (.tf). This layer defines multi-tier cloud frameworks (VPC networks, Subnets, Compute instances, and Relational databases) to achieve reproducible, drift-free environments.
+## LocalStack quick start
 
-🧪 lab-practice/
-A structured technical playground documenting specific proof-of-concept tasks, baseline Boto3 scripts, and foundational experimentation patterns before upgrading them into core project features.
+Prerequisites: Docker Compose and a LocalStack auth token.
 
-🛠️ Tech Stack & Tooling Core
-Languages: Python (Boto3, Core Standard Libraries)
+```bash
+cd localstack-dev
+export LOCALSTACK_AUTH_TOKEN=your-token
+docker compose up -d
+```
 
-Frameworks & Emulators: AWS SAM (Serverless Application Model), LocalStack, Docker Engine
+Keep the token private. The Compose setup mounts the Docker socket and stores persistent data under
+`localstack-dev/volume`; use it only on a trusted development machine. Back up or recreate that
+data when changing LocalStack versions, and never commit the token, volume data, or Terraform state.
 
-Infrastructure Layer: Terraform
+The LocalStack Lambda examples are separate SAM projects with their own runtime and test instructions.
+They were not changed as part of the current non-SAM maintenance work.
 
-Environments: Linux Subsystem (WSL / Ubuntu)
+## Terraform validation
 
-⚙️ Local Development Quickstart
-To run and test the emulated environments inside the localstack-dev/ directory, ensure Docker is running, then use the following lifecycle commands:
+GitHub Actions validates the two example Terraform roots with the backend disabled. This checks
+configuration without accessing the remote state backend or applying infrastructure. The
+`terraform-infra/terraform` configuration still requires its intended remote S3 backend for any
+stateful operation.
 
-1. Provision Mock Infrastructure
-Bash
-# Create target testing resources (e.g., S3 Buckets)
-aws s3 mb s3://hol-billing-landing --endpoint-url=http://127.0.0.1:4566
-2. Invoke Serverless Handlers Natively via SAM
-Bash
-# Invoke your Lambda template function locally over the shared docker host network
-sam local invoke "BillingValidatorFunction" -e event.json --docker-network host --skip-pull-image
-📈 Key Architectures Implemented
-Automated Data Pipelines: S3 event-driven triggers launching validation Lambda handlers, sorting valid transactions to target processing blocks while managing bad records cleanly.
-
-Unified Mini-Cloud Environments: Orchestration scripts wiring up VPC networking, isolated RDS databases, EC2 app nodes, and notification channels simultaneously.
+Before deploying any example to AWS, review its IAM permissions, endpoint configuration, state
+location, resource costs, and cleanup procedure. Treat all examples as learning material until
+they have been independently reviewed and tested for the target account.

@@ -1,0 +1,46 @@
+name: Terraform validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform-infra/**/*.tf"
+      - "terraform-infra/terraform/.terraform.lock.hcl"
+      - "lab-practise/terraform/**/*.tf"
+      - "lab-practise/terraform/.terraform.lock.hcl"
+      - ".github/workflows/terraform-validate.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform-infra/**/*.tf"
+      - "terraform-infra/terraform/.terraform.lock.hcl"
+      - "lab-practise/terraform/**/*.tf"
+      - "lab-practise/terraform/.terraform.lock.hcl"
+      - ".github/workflows/terraform-validate.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        working-directory:
+          - terraform-infra/terraform
+          - lab-practise/terraform
+    defaults:
+      run:
+        working-directory: ${{ matrix.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.17.1
+      - name: Check formatting
+        run: terraform fmt -check
+      - name: Initialize without a backend
+        run: terraform init -backend=false -lockfile=readonly
+      - name: Validate configuration
+        run: terraform validate
